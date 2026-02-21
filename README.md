@@ -48,8 +48,8 @@ graph TB
 
 ```jsonc
 {
-  // Policy server endpoint. Default: "http://localhost:8338"
-  "server_url": "https://agent-policies.devleaps.nl",
+  // Policy server endpoint. Default: "https://agent-policies.devleaps.nl"
+  "server_url": "http://localhost:8338",
 
   // Policy bundles to activate. Default: ["universal"]
   "bundles": ["universal", "python", "git"],
