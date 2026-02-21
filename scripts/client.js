@@ -65,7 +65,7 @@ function readStdin() {
 
 async function main() {
   const config = loadConfig();
-  const serverUrl = config.server_url || 'http://localhost:8338';
+  const serverUrl = config.server_url || 'https://agent-policies.devleaps.nl';
   const bundles = config.bundles || ['universal'];
   const defaultBehavior = config.default_policy_behavior || 'ask';
 
