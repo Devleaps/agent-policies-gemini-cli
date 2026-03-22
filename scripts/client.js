@@ -94,25 +94,44 @@ async function main() {
   const endpoint = `/policy/gemini/${hookEventName}`;
   const body = { bundles, default_policy_behavior: defaultBehavior, event: payload };
 
-  try {
-    const { status, body: responseBody } = await post(serverUrl, endpoint, body);
+  const maxAttempts = 5;
+  const retryableCodes = ['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'EAI_AGAIN'];
 
-    if (status !== 200) {
-      process.stderr.write(`Policy server error: HTTP ${status}\n`);
-      process.stderr.write(`Endpoint: ${endpoint}\n`);
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const { status, body: responseBody } = await post(serverUrl, endpoint, body);
+
+      if (status >= 500 && attempt < maxAttempts) {
+        const delay = 200 * Math.pow(2, attempt - 1);
+        process.stderr.write(`Policy server error: HTTP ${status}, retrying in ${delay}ms (attempt ${attempt}/${maxAttempts})\n`);
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
+
+      if (status !== 200) {
+        process.stderr.write(`Policy server error: HTTP ${status}\n`);
+        process.stderr.write(`Endpoint: ${endpoint}\n`);
+        process.exit(2);
+      }
+
+      process.stdout.write(responseBody);
+      process.exit(0);
+    } catch (e) {
+      if (retryableCodes.includes(e.code) && attempt < maxAttempts) {
+        const delay = 200 * Math.pow(2, attempt - 1);
+        process.stderr.write(`Policy client error: ${e.code}, retrying in ${delay}ms (attempt ${attempt}/${maxAttempts})\n`);
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
+
+      if (e.code === 'ECONNREFUSED') {
+        process.stderr.write(`Cannot connect to policy server at ${serverUrl}\n`);
+        process.stderr.write(`Configure server_url in ~/.agent-policies/config.json\n`);
+      } else {
+        process.stderr.write(`Policy client error: ${e.message}\n`);
+      }
       process.exit(2);
     }
-
-    process.stdout.write(responseBody);
-    process.exit(0);
-  } catch (e) {
-    if (e.code === 'ECONNREFUSED') {
-      process.stderr.write(`Cannot connect to policy server at ${serverUrl}\n`);
-      process.stderr.write(`Configure server_url in ~/.agent-policies/config.json\n`);
-    } else {
-      process.stderr.write(`Policy client error: ${e.message}\n`);
-    }
-    process.exit(2);
   }
 }
 
