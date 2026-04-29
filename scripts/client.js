@@ -91,12 +91,13 @@ async function main() {
     process.exit(2);
   }
 
-  if (process.env.GEMINI_PROJECT_DIR) {
-    payload.workspace_roots = [process.env.GEMINI_PROJECT_DIR];
-  }
-
   const endpoint = `/policy/gemini/${hookEventName}`;
-  const body = { bundles, default_policy_behavior: defaultBehavior, event: payload };
+  const body = {
+    bundles,
+    default_policy_behavior: defaultBehavior,
+    workspace_root: process.env.GEMINI_PROJECT_DIR || null,
+    event: payload,
+  };
 
   try {
     const { status, body: responseBody } = await post(serverUrl, endpoint, body);
