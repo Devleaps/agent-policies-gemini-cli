@@ -67,7 +67,6 @@ async function main() {
   const config = loadConfig();
   const serverUrl = config.server_url || 'https://agent-policies.devleaps.nl';
   const bundles = config.bundles || ['universal'];
-  const defaultBehavior = config.default_policy_behavior || 'ask';
 
   let raw;
   try {
@@ -94,7 +93,6 @@ async function main() {
   const endpoint = `/policy/gemini/${hookEventName}`;
   const body = {
     bundles,
-    default_policy_behavior: defaultBehavior,
     workspace_root: process.env.GEMINI_PROJECT_DIR || null,
     event: payload,
   };
