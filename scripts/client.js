@@ -91,6 +91,10 @@ async function main() {
     process.exit(2);
   }
 
+  if (process.env.GEMINI_PROJECT_DIR) {
+    payload.workspace_roots = [process.env.GEMINI_PROJECT_DIR];
+  }
+
   const endpoint = `/policy/gemini/${hookEventName}`;
   const body = { bundles, default_policy_behavior: defaultBehavior, event: payload };
 
